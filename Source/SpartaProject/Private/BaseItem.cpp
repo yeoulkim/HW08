@@ -46,20 +46,26 @@ void ABaseItem::OnItemEndOverlap(UPrimitiveComponent* OverlappedComp,
 
 void ABaseItem::ActivateItem(AActor* Activator)
 {
-	// 지정된 위치랑 회전에서 파티클 재생해 ~
+	// 파티클 시스템 컴포넌트를 약한 참조로 선언
+	// UParticleSystemComponent는 파티클을 제어할 수 있는 컴포넌트
+	// TWeakObjectPtr은 UObject가 파괴되면 자동으로 nullptr로 바뀌는 안전한 스마트 포인터
+	TWeakObjectPtr<UParticleSystemComponent> Particle = nullptr;
+
+	// 아이템 획득 시 파티클 재생
 	if (PickupParticle)
 	{
-		// 지정된 위치나 회전에 따라 파티클 효과 생성하는 함수
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),	// 현재 게임이 실행되고 있는 월드 객체 가져옴<-파티클 생성한 월드 정보 필요
-			PickupParticle,	// 지정해놓은 파티클 에셋
-			GetActorLocation(),	// 이 아이템의 월드 위치 가져옴
-			GetActorRotation(),	// 이 아이템의 회전 위치 가져옴
-			true	// AutoDistroy : 파티클 효과 끝난 이후에 메모리에서 자동 제거 되도록 설정
+		// 지정된 위치와 회전에서 파티클 생성
+		// AutoDestroy = true: 파티클 재생이 끝나면 자동으로 제거됨
+		Particle = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),				// 파티클을 생성할 월드
+			PickupParticle,			// 사용할 파티클 에셋
+			GetActorLocation(),		// 이 아이템의 현재 위치
+			GetActorRotation(),		// 이 아이템의 현재 회전값
+			true					// AutoDestroy: 자동 파괴
 		);
 	}
 
-	// 지정된 위치에서 사운드 효과 재생해 ~
+	// 아이템 획득 시 사운드 재생
 	if (PickupSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
@@ -69,17 +75,21 @@ void ABaseItem::ActivateItem(AActor* Activator)
 		);
 	}
 
-	UParticleSystemComponent* Particle = nullptr;  // 초기화 필요
-	if (Particle)
+	// 파티클이 생성되었다면 수동으로 제거 타이머도 설정 (예비 안전 장치)
+	if (Particle.Get())
 	{
 		FTimerHandle DestroyParticleTimerHandle;
-		// 람다 함수 - 이름이 없다?
-		// 직접 구현하긴 뭐하고 간단하게 함수같이 쓰고 싶을 때 람다 쓰기
+
+		// 일정 시간 후 파티클 컴포넌트 제거
+		// 람다 안에서 다시 IsValid 검사하여 이미 파괴된 경우에도 안전하게 처리
 		GetWorld()->GetTimerManager().SetTimer(
 			DestroyParticleTimerHandle,
 			[Particle]()
 			{
-				Particle->DestroyComponent();
+				if (IsValid(Particle.Get()))
+				{
+					Particle->DestroyComponent();
+				}
 			},
 			2.0f,
 			false

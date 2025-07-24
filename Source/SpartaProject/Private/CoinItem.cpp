@@ -26,3 +26,31 @@ void ACoinItem::ActivateItem(AActor* Activator)
 		DestroyItem();
 	}
 }
+
+void ACoinItem::SetMove(bool bMove)
+{
+	if (bMove)
+	{
+		StartMoving();  // 기본적으로 이동 시작
+	}
+	else
+	{
+		StopMoving();   // 기본적으로 이동 멈춤
+	}
+}
+
+void ACoinItem::StartMoving()
+{
+	// 기본적으로 이동을 시작하는 로직
+	bIsMoving = true;
+	SetActorEnableCollision(true);  // 이동을 시작하려면 충돌 활성화
+	// 추가적인 이동 로직을 이곳에 넣을 수 있음 
+}
+
+void ACoinItem::StopMoving()
+{
+	// 기본적으로 이동을 멈추는 로직
+	bIsMoving = false;
+	SetActorEnableCollision(false);  // 이동을 멈추려면 충돌 비활성화
+	// 추가적인 이동 로직을 이곳에 넣을 수 있음 
+}

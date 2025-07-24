@@ -42,32 +42,36 @@ void AMineItem::ActivateItem(AActor* Activator)	// 활성화되고 5초 후에 �
 
 void AMineItem::Explode()
 {
-    // 이미 선언된 'Particle' 변수를 재사용
-    UParticleSystemComponent* Particle = nullptr;  // 다시 초기화
+	// 원시 포인터로 참조되어 레벨 전환 시 가비지 컬렉팅이 이루어지지 않아 터진 것으로 예상.
+	// 약한 참조로 변경하여 가비지 컬렉팅이 이루어지도록 수정
+	// UParticleSystemComponent > Particle = nullptr
+	// 언리얼 스마트 포인트
+	// C++의 Weakptr인데, UObject 전용인 스마트 포인터.
+	TWeakObjectPtr<UParticleSystemComponent> Particle = nullptr;
 
-    if (ExplosionParticle)
-    {
-        // 이미 선언된 변수 'Particle'을 재사용
-        Particle = UGameplayStatics::SpawnEmitterAtLocation(
-            GetWorld(),
-            ExplosionParticle,
-            GetActorLocation(), // GetActorLocation() 함수 호출
-            GetActorRotation(), // GetActorRotation() 함수 호출
-            false
-        );
-    }
+	if (ExplosionParticle)
+	{
+		Particle = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			ExplosionParticle,
+			GetActorLocation(),
+			GetActorRotation(),
+			true	// 자동 파괴되도록 변경해봄.... 될지 안될지는 테스트 해야함!!
+		);
+	}
 
-    if (ExplosionSound)
-    {
-        UGameplayStatics::PlaySoundAtLocation(
-            GetWorld(),
-            ExplosionSound,
-            GetActorLocation()
-        );
-    }
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			ExplosionSound,
+			GetActorLocation()
+		);
+	}
 
-    TArray<AActor*> OverlappingActors;  // 범위 내 겹치는 액터 검색
-    ExplosionCollision->GetOverlappingActors(OverlappingActors);
+	// 폭발 범위 안에 있는 액터들 전부 확인
+	TArray<AActor*> OverlappingActors;
+	ExplosionCollision->GetOverlappingActors(OverlappingActors);
 
     // 범위 내 돌면서 태그 확인
     for (AActor* Actor : OverlappingActors)
@@ -86,19 +90,21 @@ void AMineItem::Explode()
 
     DestroyItem();
 
-    if (Particle)
-    {
-        FTimerHandle DestroyParticleTimerHandle;
-        // 람다 함수 - 이름이 없다?
-        // 직접 구현하긴 뭐하고 간단하게 함수같이 쓰고 싶을 때 람다 쓰기
-        GetWorld()->GetTimerManager().SetTimer(
-            DestroyParticleTimerHandle,
-            [Particle]()
-            {
-                Particle->DestroyComponent();
-            },
-            2.0f,
-            false
-        );
-    }
+	if (Particle.Get())
+	{
+		FTimerHandle DestroyParticleTimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(
+			DestroyParticleTimerHandle,
+			[Particle]()
+			{
+				//Pending kill
+				if (IsValid(Particle.Get()))
+				{
+					Particle->DestroyComponent();
+				}
+			},
+			2.0f,
+			false
+		);
+	}
 }

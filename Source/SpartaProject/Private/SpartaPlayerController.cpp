@@ -186,3 +186,23 @@ void ASpartaPlayerController::StartGame()
 	UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel"));
 	SetPause(false);	// 게임 끝나면 꺼~
 }
+
+// Wave UI 보여주기
+void ASpartaPlayerController::UpdateWaveUI(int32 CurrentWaveIndex, int32 MaxWaves, float RemainingTime)
+{
+	if (HUDWidgetInstance)
+	{
+		// 웨이브 번호 텍스트 업데이트
+		if (UTextBlock* WaveText = Cast<UTextBlock>(HUDWidgetInstance->GetWidgetFromName(TEXT("Wave"))))
+		{
+			// 웨이브 번호를 1부터 표시하기 위해 CurrentWaveIndex + 1을 사용
+			WaveText->SetText(FText::FromString(FString::Printf(TEXT("Wave: %d / %d"), CurrentWaveIndex + 1, MaxWaves)));
+		}
+
+		// 웨이브 타이머 텍스트 업데이트
+		if (UTextBlock* TimeText = Cast<UTextBlock>(HUDWidgetInstance->GetWidgetFromName(TEXT("Time"))))
+		{
+			TimeText->SetText(FText::FromString(FString::Printf(TEXT("Wave Time: %.1f"), RemainingTime)));
+		}
+	}
+}

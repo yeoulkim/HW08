@@ -23,7 +23,7 @@ public:
 	UBoxComponent* SpawningBox;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawning")	// 객체 바꿔야하니까 EditAnywhere
 	UDataTable* ItemDataTable;
-
+	
 	// 테스트 할 수 있으니까 에디터에 노출
 	// 랜덤 아이템을 스폰시키는 함수
 	UFUNCTION(BlueprintCallable, Category = "Spawning")
@@ -36,5 +36,4 @@ public:
 	// 아이템 랜덤으로 갖고 오는 함수
 	FItemSpawnRow* GetRandomItem() const;
 	AActor* SpawnItem(TSubclassOf<AActor> ItemClass);	// 이 액터의 하위클래스가 아니면 무조건 오류남
-
 };

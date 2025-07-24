@@ -45,6 +45,9 @@ public:
 	// HUD창 가져오는 함수
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void ShowGameHUD();
+	// UpdateWaveUI 함수 선언
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void UpdateWaveUI(int32 CurrentWaveIndex, int32 MaxWaves, float RemainingTime);
 	// 메인 메뉴창 가져오는 함수
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void ShowMainMenu(bool bIsRestart);	// 처음: Start, GameOver: Restart - bool 변수
